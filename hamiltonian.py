@@ -29,8 +29,8 @@ def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_
     dudx = dudx[:, :, None, None, :]
     f_dot_dudx = torch.sum(f_xud * dudx, dim=-1) # broadcasting along the second to last and third to last dimensions
     assert f_dot_dudx.shape[0] == x.shape[0] and f_dot_dudx.shape[1] == x.shape[1] and f_dot_dudx.shape[2] == grid_u.shape[0] and f_dot_dudx.shape[3] == grid_d.shape[1], "incorrect shapes"
-
     # need to perform the max and min operators over the correct dimensions of f_xud
-    H = torch.max(torch.min(f_dot_dudx, dim=-1).values, dim=-1).values
+    # H = torch.max(torch.min(f_dot_dudx, dim=-1).values, dim=-1).values (previously)
+    H = torch.min(torch.max(f_dot_dudx, dim=-2).values, dim=-1).values
     assert H.shape[0] == x.shape[0] and H.shape[1] == x.shape[1], "incorrect shapes"
     return H
