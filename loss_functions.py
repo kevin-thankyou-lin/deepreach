@@ -107,7 +107,7 @@ def initialize_hji_air3D(dataset, minWith, discrete_actions=False, discrete_acti
         else:
             ham = omega_max * torch.abs(dudx[..., 0] * x[..., 2] - dudx[..., 1] * x[..., 1] - dudx[..., 2])  # Control component
             ham = ham - omega_max * torch.abs(dudx[..., 2])  # Disturbance component
-            ham = ham + (velocity * (torch.cos(x[..., 2]) - 1.0) * dudx[..., 0]) + (velocity * torch.sin(x[..., 2]) * dudx[..., 1])  # Constant component
+            ham = ham + (velocity * (torch.cos(x_theta) - 1.0) * dudx[..., 0]) + (velocity * torch.sin(x_theta) * dudx[..., 1])  # Constant component
 
         # If we are computing BRT then take min with zero
         if minWith == 'zero':

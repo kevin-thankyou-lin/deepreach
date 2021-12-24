@@ -18,7 +18,6 @@ def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_
         d: pursuer angular velocity vector np.ndarray (N, 1)
     """
     # Initialize the Hamiltonian
-    # TODO KL set device
     u = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step).to(x.device)
     d = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step).to(x.device)
     
@@ -32,6 +31,6 @@ def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_
     assert f_dot_dudx.shape[0] == x.shape[0] and f_dot_dudx.shape[1] == x.shape[1] and f_dot_dudx.shape[2] == grid_u.shape[0] and f_dot_dudx.shape[3] == grid_d.shape[1], "incorrect shapes"
 
     # need to perform the max and min operators over the correct dimensions of f_xud
-    H = torch.min(torch.max(f_dot_dudx, dim=-1).values, dim=-1).values
+    H = torch.max(torch.min(f_dot_dudx, dim=-1).values, dim=-1).values
     assert H.shape[0] == x.shape[0] and H.shape[1] == x.shape[1], "incorrect shapes"
     return H
