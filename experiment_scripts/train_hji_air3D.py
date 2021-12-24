@@ -51,6 +51,9 @@ p.add_argument('--angle_alpha', type=float, default=1.0, required=False, help='A
 p.add_argument('--collisionR', type=float, default=0.25, required=False, help='Collision radisu between vehicles')
 p.add_argument('--minWith', type=str, default='none', required=False, choices=['none', 'zero', 'target'], help='BRS vs BRT computation')
 
+p.add_argument('--discrete_actions', type=bool, default=False, help='Whether to use discrete actions')
+p.add_argument('--discrete_action_step', type=float, default=0, help='Step size between discrete actions')
+
 p.add_argument('--clip_grad', default=0.0, type=float, help='Clip gradient.')
 p.add_argument('--use_lbfgs', default=False, type=bool, help='use L-BFGS.')
 p.add_argument('--pretrain', action='store_true', default=False, required=False, help='Pretrain dirichlet conditions')
@@ -61,6 +64,7 @@ p.add_argument('--checkpoint_path', default=None, help='Checkpoint to trained mo
 p.add_argument('--checkpoint_toload', type=int, default=0, help='Checkpoint from which to restart the training.')
 opt = p.parse_args()
 
+print(opt)
 # Set the source coordinates for the target set and the obstacle sets
 source_coords = [0., 0., 0.]
 if opt.counter_start == -1:
@@ -83,7 +87,7 @@ model = modules.SingleBVPNet(in_features=4, out_features=1, type=opt.model, mode
 model.cuda()
 
 # Define the loss
-loss_fn = loss_functions.initialize_hji_air3D(dataset, opt.minWith)
+loss_fn = loss_functions.initialize_hji_air3D(dataset, opt.minWith, opt.discrete_actions, opt.discrete_action_step)
 
 root_path = os.path.join(opt.logging_root, opt.experiment_name)
 

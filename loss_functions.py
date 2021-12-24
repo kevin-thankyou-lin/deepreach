@@ -2,10 +2,8 @@ import torch
 import torch.nn.functional as F
 
 import diff_operators
+from hamiltonian import air3D_hamiltonian_discrete
 import modules, utils
-
-import math
-import numpy as np
 
 
 def initialize_hji_MultiVehicleCollisionNE(dataset, minWith):
@@ -67,7 +65,7 @@ def initialize_hji_MultiVehicleCollisionNE(dataset, minWith):
     return hji_MultiVehicleCollision
 
 
-def initialize_hji_air3D(dataset, minWith):
+def initialize_hji_air3D(dataset, minWith, discrete_actions=False, discrete_action_step=None):
     # Initialize the loss function for the air3D problem
     # The dynamics parameters
     velocity = dataset.velocity
@@ -85,10 +83,11 @@ def initialize_hji_air3D(dataset, minWith):
         dudt = du[..., 0, 0]
         dudx = du[..., 0, 1:]
 
-        x_theta = x[..., 3] * 1.0
+        x_theta = x[..., 3] * 1.0 # if I change x[..., 3] directly: RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation
 
         # Scale the costate for theta appropriately to align with the range of [-pi, pi]
         dudx[..., 2] = dudx[..., 2] / alpha_angle
+        
         # Scale the coordinates
         x_theta = alpha_angle * x_theta
 
@@ -98,9 +97,17 @@ def initialize_hji_air3D(dataset, minWith):
         # \dot \psi = b - a
 
         # Compute the hamiltonian for the ego vehicle
-        ham = omega_max * torch.abs(dudx[..., 0] * x[..., 2] - dudx[..., 1] * x[..., 1] - dudx[..., 2])  # Control component
-        ham = ham - omega_max * torch.abs(dudx[..., 2])  # Disturbance component
-        ham = ham + (velocity * (torch.cos(x_theta) - 1.0) * dudx[..., 0]) + (velocity * torch.sin(x_theta) * dudx[..., 1])  # Constant component
+        if discrete_actions:
+            x1 = x[..., 1] * 1.0
+            x2 = x[..., 2] * 1.0
+            x3 = x_theta
+            x = torch.cat((x1[..., None], x2[..., None], x3[..., None]), dim=-1)
+            assert x.shape[-1] == 3, "incorrect shape"
+            ham = air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, velocity, velocity)
+        else:
+            ham = omega_max * torch.abs(dudx[..., 0] * x[..., 2] - dudx[..., 1] * x[..., 1] - dudx[..., 2])  # Control component
+            ham = ham - omega_max * torch.abs(dudx[..., 2])  # Disturbance component
+            ham = ham + (velocity * (torch.cos(x[..., 2]) - 1.0) * dudx[..., 0]) + (velocity * torch.sin(x[..., 2]) * dudx[..., 1])  # Constant component
 
         # If we are computing BRT then take min with zero
         if minWith == 'zero':
