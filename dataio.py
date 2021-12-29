@@ -92,7 +92,7 @@ class ReachabilityMultiVehicleCollisionSourceNE(Dataset):
 
     def __len__(self):
         return 1
-
+        
     def __getitem__(self, idx):
         start_time = 0.  # time to apply  initial conditions
 
@@ -147,7 +147,8 @@ class ReachabilityMultiVehicleCollisionSourceNE(Dataset):
 
         if self.pretrain and self.pretrain_counter == self.pretrain_iters:
             self.pretrain = False
-
+        # import ipdb;ipdb.set_trace()
+        print(coords.shape)
         return {'coords': coords}, {'source_boundary_values': boundary_values, 'dirichlet_mask': dirichlet_mask}
 
 
@@ -230,3 +231,26 @@ class ReachabilityAir3DSource(Dataset):
             self.pretrain = False
 
         return {'coords': coords}, {'source_boundary_values': boundary_values, 'dirichlet_mask': dirichlet_mask}
+
+    # def __getitem__(self, idx, device='cpu'):
+    #     # fixed training set
+    #     side_len = 45
+    #     time = torch.ones(side_len * side_len * side_len, 1) * 0
+    #     x = y = z = torch.linspace(-1, 1, side_len, device=device)
+    #     grid = torch.meshgrid(x, y, z)
+    #     coords = torch.stack([grid[0].reshape(-1), grid[1].reshape(-1), grid[2].reshape(-1)], axis=-1)
+    #     coords = torch.cat((time, coords), dim=1)
+    #     # set up the initial value function
+    #     boundary_values = torch.norm(coords[:, 1:3], dim=1, keepdim=True) - self.collisionR
+
+    #     # normalize the value function
+    #     norm_to = 0.02
+    #     mean = 0.25
+    #     var = 0.5
+
+    #     boundary_values = (boundary_values - mean)*norm_to/var
+        
+    #     if self.pretrain:
+    #         dirichlet_mask = torch.ones(coords.shape[0], 1) > 0
+
+    #     return {'coords': coords}, {'source_boundary_values': boundary_values, 'dirichlet_mask': dirichlet_mask}

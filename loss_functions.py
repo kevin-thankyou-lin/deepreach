@@ -24,7 +24,7 @@ def initialize_hji_MultiVehicleCollisionNE(dataset, minWith):
         batch_size = x.shape[1]
 
         if torch.all(dirichlet_mask):
-            diff_constraint_hom = torch.Tensor([0])
+            diff_constraint_hom = torch.tensor([0.0])
         else:
             du, status = diff_operators.jacobian(y, x)
             dudt = du[..., 0, 0]
@@ -114,7 +114,7 @@ def initialize_hji_air3D(dataset, minWith, discrete_actions=False, discrete_acti
             ham = torch.clamp(ham, max=0.0)
 
         if torch.all(dirichlet_mask):
-            diff_constraint_hom = torch.Tensor([0])
+            diff_constraint_hom = torch.tensor([0.0], device=x.device)
         else:
             diff_constraint_hom = dudt - ham
             if minWith == 'target':

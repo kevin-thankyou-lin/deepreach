@@ -18,10 +18,10 @@ def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_
         d: pursuer angular velocity vector np.ndarray (N, 1)
     """
     # Initialize the Hamiltonian
-    u = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step).to(x.device)
-    d = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step).to(x.device)
+    u = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step, device=x.device)
+    d = torch.arange(-omega_max, omega_max + discrete_action_step, discrete_action_step, device=x.device)
     
-    grid_u, grid_d = torch.meshgrid(u, d)
+    grid_u, grid_d = torch.meshgrid(u, d, device=x.device)
 
     # Calculate the Hamiltonian
     f_xud = air3D_dynamics(x, grid_u, grid_d, v_e, v_p) # f_xud should be (meta_batch_size, N, N_u, N_d, 3)
