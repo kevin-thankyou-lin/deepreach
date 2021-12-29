@@ -1,8 +1,8 @@
 import torch
 
-from dynamics import air3D_dynamics
+from dynamics import air3D_continuous_dynamics_from_discrete, air3D_dynamics, air3D_discrete_dynamics
 
-def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_p):
+def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_p, approx_cont_dynamics=True):
     """
     Calculates the Hamiltonian of the air3D system.
     
@@ -24,7 +24,10 @@ def air3D_hamiltonian_discrete(dudx, x, discrete_action_step, omega_max, v_e, v_
     grid_u, grid_d = torch.meshgrid(u, d)
 
     # Calculate the Hamiltonian
-    f_xud = air3D_dynamics(x, grid_u, grid_d, v_e, v_p) # f_xud should be (meta_batch_size, N, N_u, N_d, 3)
+    if approx_cont_dynamics:
+        f_xud = air3D_continuous_dynamics_from_discrete(air3D_discrete_dynamics, x, grid_u, grid_d)
+    else:
+        f_xud = air3D_dynamics(x, grid_u, grid_d, v_e, v_p) # f_xud should be (meta_batch_size, N, N_u, N_d, 3)
     assert f_xud.ndim == 5, "f_xud should be (meta_batch_size, N, N_u, N_d, 3)"
     dudx = dudx[:, :, None, None, :]
     f_dot_dudx = torch.sum(f_xud * dudx, dim=-1) # broadcasting along the second to last and third to last dimensions
