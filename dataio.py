@@ -14,7 +14,7 @@ import utils
 import pickle
 
 
-def get_mgrid(sidelen, dim=2):
+def get_mgrid(sidelen, dim=2, device='cpu'):
     '''Generates a flattened grid of (x,y,...) coordinates in a range of -1 to 1.'''
     if isinstance(sidelen, int):
         sidelen = dim * (sidelen,)
@@ -33,7 +33,7 @@ def get_mgrid(sidelen, dim=2):
 
     pixel_coords -= 0.5
     pixel_coords *= 2.
-    pixel_coords = torch.Tensor(pixel_coords).view(-1, dim)
+    pixel_coords = torch.tensor(pixel_coords, device=device).view(-1, dim)
     return pixel_coords
 
 
@@ -97,7 +97,7 @@ class ReachabilityMultiVehicleCollisionSourceNE(Dataset):
         start_time = 0.  # time to apply  initial conditions
 
         # uniformly sample domain and include coordinates where source is non-zero 
-        coords = torch.zeros(self.numpoints, self.num_states).uniform_(-1, 1)
+        coords = torch.zeros(self.numpoints, self.num_states, device=self.device).uniform_(-1, 1)
 
         if self.pretrain:
             # only sample in time around the initial condition
@@ -181,6 +181,8 @@ class ReachabilityAir3DSource(Dataset):
         self.pretrain_iters = pretrain_iters
         self.full_count = counter_end 
 
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print(f'Using device {self.device}')
         # Set the seed
         torch.manual_seed(seed)
 
@@ -191,16 +193,16 @@ class ReachabilityAir3DSource(Dataset):
         start_time = 0.  # time to apply  initial conditions
 
         # uniformly sample domain and include coordinates where source is non-zero 
-        coords = torch.zeros(self.numpoints, self.num_states).uniform_(-1, 1)
+        coords = torch.zeros(self.numpoints, self.num_states, device=self.device).uniform_(-1, 1)
 
         if self.pretrain:
             # only sample in time around the initial condition
-            time = torch.ones(self.numpoints, 1) * start_time
+            time = torch.ones(self.numpoints, 1, device=self.device) * start_time
             coords = torch.cat((time, coords), dim=1)
         else:
             # slowly grow time values from start time
             # this currently assumes start_time = 0 and max time value is tMax
-            time = self.tMin + torch.zeros(self.numpoints, 1).uniform_(0, (self.tMax-self.tMin) * (self.counter / self.full_count))
+            time = self.tMin + torch.zeros(self.numpoints, 1, device=self.device).uniform_(0, (self.tMax-self.tMin) * (self.counter / self.full_count))
             coords = torch.cat((time, coords), dim=1)
 
             # make sure we always have training samples at the initial time
@@ -217,7 +219,7 @@ class ReachabilityAir3DSource(Dataset):
         boundary_values = (boundary_values - mean)*norm_to/var
         
         if self.pretrain:
-            dirichlet_mask = torch.ones(coords.shape[0], 1) > 0
+            dirichlet_mask = torch.ones(coords.shape[0], 1, device=self.device) > 0
         else:
             # only enforce initial conditions around start_time
             dirichlet_mask = (coords[:, 0, None] == start_time)

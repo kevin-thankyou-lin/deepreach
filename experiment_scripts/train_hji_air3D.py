@@ -80,7 +80,7 @@ dataset = dataio.ReachabilityAir3DSource(numpoints=65000, collisionR=opt.collisi
                                           angle_alpha=opt.angle_alpha,
                                           num_src_samples=opt.num_src_samples)
 
-dataloader = DataLoader(dataset, shuffle=True, batch_size=opt.batch_size, pin_memory=True, num_workers=0)
+dataloader = DataLoader(dataset, shuffle=True, batch_size=opt.batch_size, pin_memory=False, num_workers=0)
 
 model = modules.SingleBVPNet(in_features=4, out_features=1, type=opt.model, mode=opt.mode,
                              final_layer_factor=1., hidden_features=opt.num_nl, num_hidden_layers=opt.num_hl)
@@ -105,17 +105,17 @@ def val_fn(model, ckpt_dir, epoch):
 
   # Get the meshgrid in the (x, y) coordinate
   sidelen = 200
-  mgrid_coords = dataio.get_mgrid(sidelen)
+  mgrid_coords = dataio.get_mgrid(sidelen, device='cuda')
 
   # Start plotting the results
   for i in range(num_times):
-    time_coords = torch.ones(mgrid_coords.shape[0], 1) * times[i]
+    time_coords = torch.ones(mgrid_coords.shape[0], 1, device='cuda') * times[i]
 
     for j in range(num_thetas):
-      theta_coords = torch.ones(mgrid_coords.shape[0], 1) * thetas[j]
+      theta_coords = torch.ones(mgrid_coords.shape[0], 1, device='cuda') * thetas[j]
       theta_coords = theta_coords / (opt.angle_alpha * math.pi)
       coords = torch.cat((time_coords, mgrid_coords, theta_coords), dim=1) 
-      model_in = {'coords': coords.cuda()}
+      model_in = {'coords': coords}
       model_out = model(model_in)['model_out']
 
       # Detatch model ouput and reshape
