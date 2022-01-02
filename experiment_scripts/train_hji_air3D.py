@@ -73,12 +73,14 @@ if opt.counter_start == -1:
 if opt.counter_end == -1:
   opt.counter_end = opt.num_epochs
 
+device = 'cuda'
+
 dataset = dataio.ReachabilityAir3DSource(numpoints=65000, collisionR=opt.collisionR, velocity=opt.velocity, 
                                           omega_max=opt.omega_max, pretrain=opt.pretrain, tMin=opt.tMin,
                                           tMax=opt.tMax, counter_start=opt.counter_start, counter_end=opt.counter_end,
                                           pretrain_iters=opt.pretrain_iters, seed=opt.seed,
                                           angle_alpha=opt.angle_alpha,
-                                          num_src_samples=opt.num_src_samples)
+                                          num_src_samples=opt.num_src_samples, device=device)
 
 dataloader = DataLoader(dataset, shuffle=True, batch_size=opt.batch_size, pin_memory=False, num_workers=0)
 
@@ -105,14 +107,14 @@ def val_fn(model, ckpt_dir, epoch):
 
   # Get the meshgrid in the (x, y) coordinate
   sidelen = 200
-  mgrid_coords = dataio.get_mgrid(sidelen, device='cuda')
+  mgrid_coords = dataio.get_mgrid(sidelen, device=device)
 
   # Start plotting the results
   for i in range(num_times):
-    time_coords = torch.ones(mgrid_coords.shape[0], 1, device='cuda') * times[i]
+    time_coords = torch.ones(mgrid_coords.shape[0], 1, device=device) * times[i]
 
     for j in range(num_thetas):
-      theta_coords = torch.ones(mgrid_coords.shape[0], 1, device='cuda') * thetas[j]
+      theta_coords = torch.ones(mgrid_coords.shape[0], 1, device=device) * thetas[j]
       theta_coords = theta_coords / (opt.angle_alpha * math.pi)
       coords = torch.cat((time_coords, mgrid_coords, theta_coords), dim=1) 
       model_in = {'coords': coords}
@@ -143,4 +145,4 @@ def val_fn(model, ckpt_dir, epoch):
 training.train(model=model, train_dataloader=dataloader, epochs=opt.num_epochs, lr=opt.lr,
                steps_til_summary=opt.steps_til_summary, epochs_til_checkpoint=opt.epochs_til_ckpt,
                model_dir=root_path, loss_fn=loss_fn, clip_grad=opt.clip_grad,
-               use_lbfgs=opt.use_lbfgs, validation_fn=val_fn, start_epoch=opt.checkpoint_toload)
+               use_lbfgs=opt.use_lbfgs, validation_fn=val_fn, start_epoch=opt.checkpoint_toload, device=device)

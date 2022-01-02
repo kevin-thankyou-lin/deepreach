@@ -156,7 +156,7 @@ class ReachabilityAir3DSource(Dataset):
     def __init__(self, numpoints, 
         collisionR=0.25, velocity=0.6, omega_max=1.1, 
         pretrain=False, tMin=0.0, tMax=0.5, counter_start=0, counter_end=100e3, 
-        pretrain_iters=2000, angle_alpha=1.0, num_src_samples=1000, seed=0):
+        pretrain_iters=2000, angle_alpha=1.0, num_src_samples=1000, seed=0, device='cpu'):
         super().__init__()
         torch.manual_seed(0)
 
@@ -181,7 +181,7 @@ class ReachabilityAir3DSource(Dataset):
         self.pretrain_iters = pretrain_iters
         self.full_count = counter_end 
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device #'cuda' if torch.cuda.is_available() else 'cpu'
         print(f'Using device {self.device}')
         # Set the seed
         torch.manual_seed(seed)

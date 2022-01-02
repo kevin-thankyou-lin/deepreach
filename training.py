@@ -13,7 +13,7 @@ import shutil
 
 def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_checkpoint, model_dir, loss_fn,
           summary_fn=None, val_dataloader=None, double_precision=False, clip_grad=False, use_lbfgs=False, loss_schedules=None,
-          validation_fn=None, start_epoch=0):
+          validation_fn=None, start_epoch=0, device='cpu'):
 
     optim = torch.optim.Adam(lr=lr, params=model.parameters())
 
@@ -70,9 +70,12 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
 
             for step, (model_input, gt) in enumerate(train_dataloader):
                 start_time = time.time()
-            
-                model_input = {key: value for key, value in model_input.items()}
-                gt = {key: value for key, value in gt.items()}
+                if device == 'cpu':
+                    model_input = {key: value.cuda() for key, value in model_input.items()}
+                    gt = {key: value.cuda() for key, value in gt.items()}
+                elif device == 'cuda':
+                    model_input = {key: value for key, value in model_input.items()}
+                    gt = {key: value for key, value in gt.items()}
 
                 if double_precision:
                     model_input = {key: value.double() for key, value in model_input.items()}
