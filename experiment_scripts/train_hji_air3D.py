@@ -73,7 +73,7 @@ if opt.counter_start == -1:
 if opt.counter_end == -1:
   opt.counter_end = opt.num_epochs
 
-device = 'cuda'
+device = 'cpu'
 
 dataset = dataio.ReachabilityAir3DSource(numpoints=65000, collisionR=opt.collisionR, velocity=opt.velocity, 
                                           omega_max=opt.omega_max, pretrain=opt.pretrain, tMin=opt.tMin,
